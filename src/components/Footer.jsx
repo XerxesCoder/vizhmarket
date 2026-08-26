@@ -2,132 +2,131 @@ import {
   IconBrandInstagram,
   IconBrandTelegram,
   IconBrandTwitter,
+  IconBrandWhatsapp,
+  IconChevronLeft,
 } from "@tabler/icons-react";
+import Link from "next/link";
+
+const SOCIAL_LINKS = [
+  { icon: IconBrandInstagram, href: "#", label: "اینستاگرام" },
+  { icon: IconBrandTelegram, href: "#", label: "تلگرام" },
+  { icon: IconBrandWhatsapp, href: "#", label: "واتساپ" },
+  { icon: IconBrandTwitter, href: "#", label: "توییتر" },
+];
+
+const FOOTER_SECTIONS = [
+  {
+    title: "درباره ویژ مارکت",
+    links: [
+      "اتاق خبر ویژ مارکت",
+      "فروش در ویژ مارکت",
+      "تماس با ما",
+      "قوانین و مقررات",
+    ],
+  },
+  {
+    title: "خدمات مشتریان",
+    links: [
+      "پرسش‌های متداول",
+      "رویه بازگرداندن کالا",
+      "شرایط استفاده",
+      "گزارش باگ",
+    ],
+  },
+  {
+    title: "راهنمای خرید",
+    links: ["نحوه ثبت سفارش", "رویه ارسال سفارش", "شیوه‌های پرداخت"],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-muted/30 border-t mt-auto" dir="rtl">
-      <div className="container mx-auto px-4 lg:px-8 py-8">
-        {/* Top Section: Logo & Slogan (No Phone Number) */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-8 border-b border-border">
+    <footer className="mt-auto border-t border-border/50 bg-gradient-to-b from-background to-muted/20" dir="rtl">
+      {/* Top accent bar */}
+      <div className="h-1 bg-gradient-to-l from-primary/40 via-primary/20 to-transparent" />
+
+      <div className="container mx-auto px-4 lg:px-8">
+        {/* Brand Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-10 border-b border-border/50">
           <div className="flex items-center gap-4">
-            <span className="text-2xl font-black text-primary tracking-tighter">
-              ویژمارکت
+            <span className="text-3xl font-black text-primary tracking-tighter">
+              ویژ مارکت
             </span>
-            <div className="h-8 w-px bg-border hidden md:block"></div>
+            <div className="h-10 w-px bg-border/50 hidden md:block" />
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 تجربه‌ای متفاوت از خرید آنلاین
               </span>
-              <span className="text-lg font-bold text-foreground">
+              <span className="text-base font-bold text-foreground">
                 تضمین بهترین قیمت و کیفیت
               </span>
             </div>
           </div>
+          <div className="flex gap-2">
+            {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2.5 bg-background rounded-xl border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 hover:shadow-sm transition-all"
+                aria-label={label}
+              >
+                <Icon size={18} />
+              </a>
+            ))}
+          </div>
         </div>
 
-        {/* Text Grid (No Links) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-8">
+        {/* Links Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10">
+          {FOOTER_SECTIONS.map((section) => (
+            <div key={section.title}>
+              <h3 className="font-bold text-sm mb-4 text-foreground">
+                {section.title}
+              </h3>
+              <ul className="space-y-3">
+                {section.links.map((link) => (
+                  <li key={link}>
+                    <span className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-default">
+                      <IconChevronLeft size={12} className="opacity-50" />
+                      {link}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          {/* Trust & Social */}
           <div>
-            <h3 className="font-bold text-base mb-4 text-foreground">
-              درباره ویژمارکت
-            </h3>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  اتاق خبر ویژمارکت
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  فروش در ویژمارکت
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  تماس با ما
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  قوانین و مقررات
-                </span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-base mb-4 text-foreground">
-              خدمات مشتریان
-            </h3>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  پاسخ به پرسش‌های متداول
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  رویه‌های بازگرداندن کالا
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  شرایط استفاده
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  گزارش باگ
-                </span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-base mb-4 text-foreground">
-              راهنمای خرید
-            </h3>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  نحوه ثبت سفارش
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  رویه ارسال سفارش
-                </span>
-              </li>
-              <li>
-                <span className="cursor-default hover:text-foreground transition-colors">
-                  شیوه‌های پرداخت
-                </span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-base mb-4 text-foreground">
-              همراه ما باشید!
+            <h3 className="font-bold text-sm mb-4 text-foreground">
+              همراه ما باشید
             </h3>
 
-            {/* Static Social Icons (No Links) */}
-            <div className="flex gap-3 mb-6">
-              <span className="p-2.5 bg-background rounded-lg border text-muted-foreground hover:text-foreground transition-all cursor-default">
-                <IconBrandInstagram size={20} />
-              </span>
-              <span className="p-2.5 bg-background rounded-lg border text-muted-foreground hover:text-foreground transition-all cursor-default">
-                <IconBrandTelegram size={20} />
-              </span>
-              <span className="p-2.5 bg-background rounded-lg border text-muted-foreground hover:text-foreground transition-all cursor-default">
-                <IconBrandTwitter size={20} />
-              </span>
+            <div className="flex gap-2 mb-6">
+              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 bg-background rounded-xl border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 hover:shadow-sm transition-all"
+                  aria-label={label}
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
             </div>
 
-            {/* Trust Badges Placeholders */}
+            {/* Trust Badges */}
             <div className="flex gap-3">
-              <div className="w-20 h-20 bg-background rounded-lg border flex items-center justify-center text-[10px] text-muted-foreground font-bold">
-                اینماد
+              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[9px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
+                <span className="text-primary text-lg font-black">e</span>
+                نماد الکترونیک
               </div>
-              <div className="w-20 h-20 bg-background rounded-lg border flex items-center justify-center text-[10px] text-muted-foreground font-bold">
+              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[9px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
+                <span className="text-primary text-lg font-black">S</span>
                 ساماندهی
               </div>
             </div>
@@ -135,11 +134,11 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="pt-8 border-t border-border text-center md:text-right">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            استفاده از مطالب فروشگاه اینترنتی ویژمارکت فقط برای مقاصد غیرتجاری و
+        <div className="py-8 border-t border-border/50">
+          <p className="text-xs text-muted-foreground/70 text-center leading-relaxed">
+            استفاده از مطالب فروشگاه اینترنتی ویژ مارکت فقط برای مقاصد غیرتجاری و
             با ذکر منبع بلامانع است. کلیه حقوق این سایت متعلق به فروشگاه آنلاین
-            ویژمارکت می‌باشد. © ۱۴۰۳
+            ویژ مارکت می‌باشد. © ۱۴۰۳
           </p>
         </div>
       </div>

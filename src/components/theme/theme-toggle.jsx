@@ -16,20 +16,15 @@ export function ModeToggle() {
     <Button
       variant="outline"
       size="icon"
-      onClick={() => {
-        if (theme == "light") {
-          setTheme("dark");
-        } else {
-          setTheme("light");
-        }
-      }}
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      className="rounded-xl h-11 w-11"
     >
       {theme === "light" ? (
-        <IconSun className="h-5 w-5" />
-      ) : (
         <IconMoon className="h-5 w-5" />
+      ) : (
+        <IconSun className="h-5 w-5" />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">تغییر تم</span>
     </Button>
   );
 }

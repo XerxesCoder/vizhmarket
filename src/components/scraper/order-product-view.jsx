@@ -1,7 +1,3 @@
-// components/scraper/order-product-view.jsx
-/* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable react-hooks/immutability */
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -36,12 +32,12 @@ export default function OrderProductView() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
 
-  // Sync input field if URL changes externally (e.g., browser back/forward)
+  // Sync input field when URL changes via browser navigation
   useEffect(() => {
     setInputValue(queryUrl);
   }, [queryUrl]);
 
-  // Fetch data whenever the URL parameter changes (Single Source of Truth)
+  // Fetch product data whenever the URL param changes (single source of truth)
   useEffect(() => {
     if (!queryUrl) {
       setData(null);
@@ -59,7 +55,7 @@ export default function OrderProductView() {
       return;
     }
 
-    let isSubscribed = true;
+    let cancelled = false;
     setLoading(true);
     setData(null);
     setError(null);
@@ -68,7 +64,7 @@ export default function OrderProductView() {
       try {
         const result = await scrapeProduct(queryUrl);
 
-        if (!isSubscribed) return;
+        if (cancelled) return;
 
         if (result.success === false) {
           setError(result.error || "خطا در استخراج اطلاعات");
@@ -77,11 +73,12 @@ export default function OrderProductView() {
           setData(result.data);
         }
       } catch (err) {
-        if (!isSubscribed) return;
-        setError(err.message || "خطای غیرمنتظره در سرور");
-        setData(null);
+        if (!cancelled) {
+          setError(err.message || "خطای غیرمنتظره در سرور");
+          setData(null);
+        }
       } finally {
-        if (isSubscribed) {
+        if (!cancelled) {
           setLoading(false);
         }
       }
@@ -90,11 +87,11 @@ export default function OrderProductView() {
     fetchData();
 
     return () => {
-      isSubscribed = false;
+      cancelled = true;
     };
   }, [queryUrl]);
 
-  const handleScrape = async (e) => {
+  const handleScrape = (e) => {
     e.preventDefault();
     const params = new URLSearchParams(searchParams);
     if (inputValue) {
@@ -102,34 +99,29 @@ export default function OrderProductView() {
     } else {
       params.delete("url");
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const handleReset = () => {
-    router.push(pathname, { scroll: false });
+    router.replace(pathname, { scroll: false });
   };
 
+  // Derived data
   const storeName = data ? getStoreName(data.url) : getStoreName(queryUrl);
   const currency = data ? getCurrency(data.url) : "درهم";
 
-  const currentPrice = useMemo(() => data?.pricing?.currentPrice || 0, [data]);
-  const beforeDiscountPrice = useMemo(
-    () => data?.pricing?.beforeDiscountPrice || 0,
-    [data],
-  );
-  const discountPercentage = useMemo(
-    () => data?.pricing?.discountPercentage || 0,
-    [data],
-  );
-  const savings = useMemo(() => data?.pricing?.savedAmount || 0, [data]);
+  const currentPrice = data?.pricing?.currentPrice || 0;
+  const beforeDiscountPrice = data?.pricing?.beforeDiscountPrice || 0;
+  const discountPercentage = data?.pricing?.discountPercentage || 0;
+  const savings = data?.pricing?.savedAmount || 0;
 
   const mainImage =
     data?.images?.find((img) => img.type === "main")?.url ||
     data?.images?.[0]?.url;
-  const galleryImages =
-    data?.images?.filter((img) => img.type === "gallery") || [];
 
-  const combinedDetails = useMemo(() => {
+  const galleryImages = data?.images?.filter((img) => img.type === "gallery") || [];
+
+  const detailsWithBullets = useMemo(() => {
     if (!data) return {};
     const details = { ...(data.productDetails || {}) };
     if (Array.isArray(data.detailBullets)) {
@@ -179,7 +171,7 @@ export default function OrderProductView() {
 
             <ProductInfo
               storeName={storeName}
-              combinedDetails={combinedDetails}
+              combinedDetails={detailsWithBullets}
             />
 
             <ProductCTA
