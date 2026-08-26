@@ -1,0 +1,117 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+
+enum OrderType {
+  WEB_PRODUCT   
+  AMAZON_URL    
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  SHIPPED
+  CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// --- Models ---
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  aedToIrr  Float    
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String    @unique
+  email     String    @unique
+  role      Role      @default(USER)
+  orders    Order[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Category {
+  id       String     @id @default(cuid())
+  name     String
+  slug     String     @unique
+  
+
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryTree")
+  
+
+  products Product[]  @relation(onDelete: Cascade) 
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  image         String
+  aedPrice      Float     
+  irrPrice      Float     
+  discount      Int?      
+  isExpress     Boolean   @default(false)
+  stock         Int       @default(0)
+  
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orders        Order[]   
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Order {
+  id              String       @id @default(cuid())
+  orderType       OrderType    @default(WEB_PRODUCT)
+  
+  // --- User Relation ---
+  // Note: Using onDelete: SetNull here. If an admin deletes a user, 
+  // we keep the order history for financial records, just remove the user link.
+  userId          String?
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // --- For WEB_PRODUCT orders ---
+  productId       String?
+  product         Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  // --- For AMAZON_URL orders ---
+  amazonUrl       String?
+  requestedTitle  String?      
+  
+  // --- Pricing Snapshot ---
+  quantity        Int          @default(1)
+  unitAedPrice    Float        
+  unitIrrRate     Float        
+  totalIrrPrice   Float        
+  
+  // --- Customer & Status ---
+  status          OrderStatus  @default(PENDING)
+  customerName    String
+  customerPhone   String
+  shippingAddress String
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
