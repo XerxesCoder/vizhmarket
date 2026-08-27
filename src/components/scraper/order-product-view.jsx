@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -5,7 +6,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { scrapeAmazonProductQWEN as scrapeProduct } from "@/app/actions/amazonScraper";
+import { scrapeAmazonProduct as scrapeProduct } from "@/app/actions/amazonScraper";
 
 import {
   isValidDomain,
@@ -63,9 +64,12 @@ export default function OrderProductView() {
     const fetchData = async () => {
       try {
         const result = await scrapeProduct(queryUrl);
-
+        console.log(result);
         if (cancelled) return;
-
+        if (result.data?.productTitle == "Not found") {
+          setError(result.error || "خطا در استخراج اطلاعات");
+          setData(null);
+        }
         if (result.success === false) {
           setError(result.error || "خطا در استخراج اطلاعات");
           setData(null);
@@ -119,7 +123,8 @@ export default function OrderProductView() {
     data?.images?.find((img) => img.type === "main")?.url ||
     data?.images?.[0]?.url;
 
-  const galleryImages = data?.images?.filter((img) => img.type === "gallery") || [];
+  const galleryImages =
+    data?.images?.filter((img) => img.type === "gallery") || [];
 
   const detailsWithBullets = useMemo(() => {
     if (!data) return {};

@@ -3,7 +3,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 
-export async function scrapeAmazonProductQWEN(url) {
+export async function scrapeAmazonProduct(url) {
   if (!url || !url.startsWith("http")) {
     return { success: false, error: "آدرس URL معتبر نیست." };
   }
@@ -22,7 +22,6 @@ export async function scrapeAmazonProductQWEN(url) {
 
     const $ = cheerio.load(response.data);
 
-    // 1. EXTRACT ALL PRODUCT INFO & IMAGES
     const productTitle = $("#productTitle").text().trim() || "Not found";
 
     const images = [];
@@ -44,7 +43,9 @@ export async function scrapeAmazonProductQWEN(url) {
     });
 
     const productDetails = {};
-    $("#prodDetails .a-keyvalue tr, #prodDetails .a-row").each((i, el) => {
+    $(
+      "#prodDetails .a-keyvalue tr, #prodDetails .a-row, #productDescription",
+    ).each((i, el) => {
       const key = $(el)
         .find("th, .a-span3, .a-text-bold")
         .first()
@@ -66,7 +67,6 @@ export async function scrapeAmazonProductQWEN(url) {
       if (text) detailBullets.push(text);
     });
 
-    // 2. EXTRACT PRICES (STRICTLY NUMERIC)
     const priceWholeRaw = $(".a-price-whole").first().text().trim();
     const priceFractionRaw = $(".a-price-fraction").first().text().trim();
 
@@ -129,8 +129,7 @@ export async function scrapeAmazonProductQWEN(url) {
         savedAmount,
       },
     };
-
-    // 4. RETURN DATA AS RESPONSE
+    console.log(fullProductData);
     return {
       success: true,
       data: fullProductData,

@@ -21,8 +21,8 @@ export default function SearchForm({
 }) {
   return (
     <section className="w-full py-16 md:py-24 flex justify-center items-center">
-      <Card className="w-full max-w-2xl border-primary/10 shadow-xl shadow-primary/5">
-        <CardContent className="p-8 md:p-10 space-y-6">
+      <Card className="w-full max-w-5xl border-primary/10 shadow-xl shadow-primary/5">
+        <CardContent className="space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <Badge variant="secondary" className="mb-2 px-3 py-1 text-xs">
@@ -75,7 +75,9 @@ export default function SearchForm({
 
           {/* Store Quick-select */}
           <div className="text-center space-y-2">
-            <p className="text-xs text-muted-foreground">فروشگاه‌های مورد پشتیبانی</p>
+            <p className="text-xs text-muted-foreground">
+              فروشگاه‌های مورد پشتیبانی
+            </p>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               {STORE_CHIPS.map((store) => (
                 <Badge

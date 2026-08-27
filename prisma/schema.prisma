@@ -10,26 +10,22 @@ datasource db {
 
 
 
-
-enum OrderType {
-  WEB_PRODUCT   
-  AMAZON_URL    
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  PAID
-  SHIPPED
-  CANCELLED
-}
-
 enum Role {
   USER
   ADMIN
 }
 
-// --- Models ---
+
+enum OrderStatus {
+  SUBMITTED
+  PAID
+  BOUGHT
+  SHIPPED_BY_STORE
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model ExchangeRate {
   id        String   @id @default(cuid())
   aedToIrr  Float    
@@ -39,78 +35,119 @@ model ExchangeRate {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String
-  phone     String    @unique
-  email     String    @unique
-  role      Role      @default(USER)
-  orders    Order[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  name          String
+  phone         String         @unique
+  email         String         @unique
+  role          Role           @default(USER)
+  
+  // Relations to split order models
+  storeOrders   StoreOrder[]
+  webOrders  WebOrder[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Category {
-  id       String     @id @default(cuid())
-  name     String
-  slug     String     @unique
+  id         String     @id @default(cuid())
+  name       String
+  slug       String     @unique
   
-
-  parentId String?
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children Category[] @relation("CategoryTree")
+  parentId   String?
+  parent     Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children   Category[] @relation("CategoryTree")
   
-
-  products Product[]  @relation(onDelete: Cascade) 
+  products   Product[]  
 }
 
 model Product {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   title         String
+  slug          String       @unique // Added for SEO-friendly URLs
+  sku           String?      @unique // Added for inventory management
+  
   description   String?
   image         String
   aedPrice      Float     
   irrPrice      Float     
   discount      Int?      
-  isExpress     Boolean   @default(false)
-  stock         Int       @default(0)
+  isExpress     Boolean      @default(false)
+  stock         Int          @default(0)
   
   categoryId    String
-  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  orders        Order[]   
+  category      Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  storeOrders   StoreOrder[] 
   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
-model Order {
+// ==========================================
+// 1. STORE ORDER (Buying directly from you)
+// ==========================================
+model StoreOrder {
   id              String       @id @default(cuid())
-  orderType       OrderType    @default(WEB_PRODUCT)
   
   // --- User Relation ---
-  // Note: Using onDelete: SetNull here. If an admin deletes a user, 
-  // we keep the order history for financial records, just remove the user link.
   userId          String?
-  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull) // Preserves order if user is deleted
   
-  // --- For WEB_PRODUCT orders ---
-  productId       String?
-  product         Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
-  
-  // --- For AMAZON_URL orders ---
-  amazonUrl       String?
-  requestedTitle  String?      
+  // --- Product Relation ---
+  productId       String
+  product         Product      @relation(fields: [productId], references: [id]) // Defaults to Restrict: prevents deleting products with active orders
   
   // --- Pricing Snapshot ---
   quantity        Int          @default(1)
   unitAedPrice    Float        
   unitIrrRate     Float        
-  totalIrrPrice   Float        
+
   
-  // --- Customer & Status ---
-  status          OrderStatus  @default(PENDING)
+  // --- Customer Info (Guest Checkout Supported) ---
   customerName    String
   customerPhone   String
+  customerEmail   String?      // Optional for guest checkout
   shippingAddress String
+  
+  // --- Status ---
+  status          OrderStatus  @default(SUBMITTED)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+// ==========================================
+// 2. AMAZON ORDER (Concierge / Proxy Buying)
+// ==========================================
+model WebOrder {
+  id              String       @id @default(cuid())
+  
+  userId          String?
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  store String?
+  // --- Request Details ---
+  requestedUrl String    // The URL the user submitted
+  requestedTitle     String?   // Optional title provided by user
+  
+  // --- Fulfillment Tracking (Admin updates these) ---
+  actualUrl    String?   // The actual URL purchased by admin (if different)
+  actualAedCost      Float?    // The real cost paid by admin in AED
+  trackingNumber     String?   // Shipping tracking number
+  
+  // --- Pricing Snapshot (Estimate at submission) ---
+  quantity        Int          @default(1)
+  unitAedPrice    Float        // Estimated/agreed AED price at checkout
+  unitIrrRate     Float        // Exchange rate at the time of order
+  totalIrrPrice   Float        // Estimated total in IRR
+  
+  // --- Customer Info (Guest Checkout Supported) ---
+  customerName    String
+  customerPhone   String
+  customerEmail   String?      // Optional for guest checkout
+  shippingAddress String
+  
+  // --- Status ---
+  status          OrderStatus  @default(SUBMITTED)
   
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

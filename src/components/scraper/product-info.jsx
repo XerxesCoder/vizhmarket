@@ -13,7 +13,7 @@ const TRUST_BADGES = [
 
 export default function ProductInfo({ storeName, combinedDetails }) {
   const detailEntries = Object.entries(combinedDetails).filter(([_, value]) =>
-    isValidDetail(value)
+    isValidDetail(value),
   );
 
   return (
@@ -48,9 +48,12 @@ export default function ProductInfo({ storeName, combinedDetails }) {
       {/* Trust Badges Grid */}
       <div className="grid grid-cols-2 gap-3">
         {TRUST_BADGES.map((badge, i) => (
-          <Card key={i} className="border-border/50 hover:border-primary/20 transition-colors">
-            <CardContent className="p-4 flex items-center gap-3">
-              <span className="text-2xl flex-shrink-0">{badge.icon}</span>
+          <Card
+            key={i}
+            className="border-border/50 hover:border-primary/20 transition-colors"
+          >
+            <CardContent className="flex items-center gap-3">
+              <span className="text-2xl shrink-0">{badge.icon}</span>
               <span className="text-sm font-semibold text-foreground leading-relaxed">
                 {badge.text}
               </span>
@@ -83,10 +86,16 @@ export default function ProductInfo({ storeName, combinedDetails }) {
                     }`}
                   >
                     <span className="font-medium text-muted-foreground truncate pl-2">
-                      {key.replace(/\n/g, " ").replace(/\u200F/g, "").trim()}
+                      {key
+                        .replace(/\n/g, " ")
+                        .replace(/\u200F/g, "")
+                        .trim()}
                     </span>
                     <span className="text-foreground break-words">
-                      {value.replace(/\n/g, " ").replace(/\u200F/g, "").trim()}
+                      {value
+                        .replace(/\n/g, " ")
+                        .replace(/\u200F/g, "")
+                        .trim()}
                     </span>
                   </div>
                 ))}

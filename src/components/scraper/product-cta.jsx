@@ -30,7 +30,7 @@ export default function ProductCTA({
   return (
     <div className="lg:col-span-3">
       <Card className="sticky top-24 border-primary/10 shadow-lg shadow-primary/5">
-        <CardContent className="p-6 space-y-5">
+        <CardContent className="space-y-5">
           {/* Store Price */}
           <div className="space-y-2">
             <span className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -50,13 +50,12 @@ export default function ProductCTA({
                 </span>
                 {hasDiscount && (
                   <Badge variant="destructive" className="text-xs px-2 py-0.5">
-                    {
-                      Math.round(
-                        ((beforeDiscountPrice - currentPrice) /
-                          beforeDiscountPrice) *
-                          100
-                      )
-                    }%-
+                    {Math.round(
+                      ((beforeDiscountPrice - currentPrice) /
+                        beforeDiscountPrice) *
+                        100,
+                    )}
+                    %-
                   </Badge>
                 )}
               </div>
@@ -136,7 +135,10 @@ export default function ProductCTA({
 
           {/* CTA Buttons */}
           <div className="flex flex-col gap-3">
-            <Button size="lg" className="w-full h-13 gap-3 rounded-xl text-base font-bold shadow-lg hover:shadow-xl transition-all">
+            <Button
+              size="lg"
+              className="w-full h-13 gap-3 rounded-xl text-base font-bold shadow-lg hover:shadow-xl transition-all"
+            >
               <IconShoppingCart size={20} />
               افزودن به سبد خرید
             </Button>
