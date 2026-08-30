@@ -16,30 +16,35 @@ const SOCIAL_LINKS = [
 
 const FOOTER_SECTIONS = [
   {
-    title: "درباره ویژ مارکت",
-    links: [
-      "اتاق خبر ویژ مارکت",
-      "فروش در ویژ مارکت",
-      "تماس با ما",
-      "قوانین و مقررات",
-    ],
-  },
-  {
     title: "خدمات مشتریان",
     links: [
-      "پرسش‌های متداول",
-      "رویه بازگرداندن کالا",
-      "شرایط استفاده",
-      "گزارش باگ",
+      { label: "پرسش‌های متداول", href: "#" },
+      { label: "رویه بازگرداندن کالا", href: "#" },
+      { label: "شرایط استفاده", href: "#" },
+      { label: "گزارش باگ", href: "#" },
     ],
   },
   {
-    title: "راهنمای خرید",
-    links: ["نحوه ثبت سفارش", "رویه ارسال سفارش", "شیوه‌های پرداخت"],
+    title: "درباره ویژ مارکت",
+    links: [
+      { label: "تماس با ما", href: "#contact" },
+      { label: "قوانین و مقررات", href: "#" },
+      { label: "حریم خصوصی", href: "#" },
+    ],
   },
 ];
 
-export default function Footer() {
+export default function Footer({ categories = [] }) {
+  // Build category links from real categories (roots + their children)
+  const categoryLinks = categories.flatMap((cat) => [
+    { label: cat.name, href: `/store/${cat.slug}` },
+    ...cat.children.map((child) => ({ label: `${cat.name} — ${child.name}`, href: `/store/${child.slug}` })),
+  ]);
+  const dynamicSections = categoryLinks.length > 0
+    ? [{ title: "دسته‌بندی‌ها", links: categoryLinks }]
+    : [{ title: "دسترسی سریع", links: [{ label: "فروشگاه", href: "/store" }, { label: "سفارش از آمازون", href: "/order" }] }];
+  const sections = [...dynamicSections, ...FOOTER_SECTIONS];
+
   return (
     <footer className="mt-auto border-t border-border/50 bg-gradient-to-b from-background to-muted/20" dir="rtl">
       {/* Top accent bar */}
@@ -80,18 +85,21 @@ export default function Footer() {
 
         {/* Links Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10">
-          {FOOTER_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <div key={section.title}>
               <h3 className="font-bold text-sm mb-4 text-foreground">
                 {section.title}
               </h3>
               <ul className="space-y-3">
                 {section.links.map((link) => (
-                  <li key={link}>
-                    <span className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-default">
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       <IconChevronLeft size={12} className="opacity-50" />
-                      {link}
-                    </span>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

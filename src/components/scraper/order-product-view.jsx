@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +21,7 @@ import ProductGallery from "./product-gallery";
 import ProductInfo from "./product-info";
 import ProductCTA from "./product-cta";
 
-export default function OrderProductView() {
+function OrderProductViewContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -64,18 +64,13 @@ export default function OrderProductView() {
     const fetchData = async () => {
       try {
         const result = await scrapeProduct(queryUrl);
-        console.log(result);
         if (cancelled) return;
-        if (result.data?.productTitle == "Not found") {
+        if (result.success === false || result.data?.productTitle === "Not found") {
           setError(result.error || "خطا در استخراج اطلاعات");
           setData(null);
+          return;
         }
-        if (result.success === false) {
-          setError(result.error || "خطا در استخراج اطلاعات");
-          setData(null);
-        } else {
-          setData(result.data);
-        }
+        setData(result.data);
       } catch (err) {
         if (!cancelled) {
           setError(err.message || "خطای غیرمنتظره در سرور");
@@ -193,5 +188,19 @@ export default function OrderProductView() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrderProductView() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-7xl mx-auto p-4 md:p-6">
+          <ProductSkeleton />
+        </div>
+      }
+    >
+      <OrderProductViewContent />
+    </Suspense>
   );
 }

@@ -1,244 +1,218 @@
 import Link from "next/link";
 import {
+  IconChevronLeft,
   IconShoppingCart,
   IconTruck,
   IconShieldCheck,
-  IconLink,
-  IconArrowLeft,
-  IconCheck,
-  IconWorld,
-  IconStar,
-  IconHeart,
-  IconDiscount,
+  IconHeadset,
+  IconTrendingUp,
 } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SectionProductCard } from "@/components/store/section-product-card";
 
-const STEPS = [
-  {
-    step: "۱",
-    title: "محصول را در آمازون پیدا کنید",
-    desc: "به سایت آمازون امارات (amazon.ae) بروید و محصول مورد نظر خود را پیدا کنید.",
-    icon: IconWorld,
-  },
-  {
-    step: "۲",
-    title: "لینک محصول را کپی کنید",
-    desc: "لینک صفحه محصول را کپی کرده و در کادر جستجوی ویژ مارکت قرار دهید.",
-    icon: IconLink,
-  },
-  {
-    step: "۳",
-    title: "سفارش دهید و تحویل بگیرید",
-    desc: "قیمت نهایی به تومان را مشاهده کنید، پرداخت نمایید و منتظر تحویل اکسپرس باشید.",
-    icon: IconTruck,
-  },
+const SERVICE_STRIPS = [
+  { icon: IconTruck, title: "ارسال اکسپرس", desc: "به سراسر کشور" },
+  { icon: IconShieldCheck, title: "ضمانت اصالت", desc: "بازگشت ۷ روزه" },
+  { icon: IconHeadset, title: "پشتیبانی ۲۴/۷", desc: "همراه شما هستیم" },
+  { icon: IconShoppingCart, title: "قیمت شفاف", desc: "پرداخت امن" },
 ];
 
-const FEATURES = [
-  {
-    icon: IconShieldCheck,
-    title: "تضمین اصالت کالا",
-    desc: "تمامی محصولات مستقیماً از آمازون تهیه شده و ۱۰۰٪ اورجینال هستند.",
-  },
-  {
-    icon: IconTruck,
-    title: "ارسال اکسپرس به ایران",
-    desc: "تحویل سفارشات در سریع‌ترین زمان ممکن (۱۵ تا ۲۰ روز کاری).",
-  },
-  {
-    icon: IconShoppingCart,
-    title: "قیمت شفاف و نهایی",
-    desc: "قیمت نمایش داده شده شامل هزینه کالا، حمل‌ونقل و گمرک است.",
-  },
-  {
-    icon: IconCheck,
-    title: "۷ روز ضمانت بازگشت",
-    desc: "در صورت وجود هرگونه مغایرت، امکان بازگشت کالا وجود دارد.",
-  },
-];
-
-export default function LandingPage() {
+/* ── Category icon strip (like digikala) ── */
+function CategoryStrip({ categories = [] }) {
   return (
-    <div className="w-full" dir="rtl">
-      {/* ════════════ 1. Hero Section ════════════ */}
-      <section className="relative overflow-hidden py-20 md:py-32">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-background pointer-events-none" />
-        <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-primary/[0.03] rounded-full blur-3xl" />
-
-        <div className="container mx-auto px-4 text-center space-y-8 relative z-10">
-          <Badge
-            variant="secondary"
-            className="mb-4 px-4 py-1.5 text-sm font-medium animate-fade-in"
+    <div className="bg-background rounded-2xl border border-border/50 py-4 px-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Link
+          href="/store"
+          className="shrink-0 flex flex-col items-center gap-2 w-20"
+        >
+          <span className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-2xl">
+            🛍️
+          </span>
+          <span className="text-[11px] text-center leading-4">همه</span>
+        </Link>
+        {categories.map((cat) => (
+          <Link
+            key={cat.id}
+            href={`/store/${cat.slug}`}
+            className="shrink-0 flex flex-col items-center gap-2 w-20"
           >
-            🚀 سریع‌ترین راه خرید از آمازون امارات
-          </Badge>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight animate-fade-in [animation-delay:100ms]">
-            خرید مستقیم از آمازون،
-            <span className="bg-gradient-to-l from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent block mt-2">
-              بدون واسطه و با تضمین قیمت
+            <span className="w-14 h-14 rounded-full overflow-hidden bg-muted">
+              {cat.image ? (
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  width={56}
+                  height={56}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="w-full h-full flex items-center justify-center text-xl">🛒</span>
+              )}
             </span>
-          </h1>
+            <span className="text-[11px] text-center leading-4 line-clamp-2">{cat.name}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in [animation-delay:200ms]">
-            لینک محصول مورد نظر خود را از آمازون امارات کپی کنید. ما آن را با
-            بهترین نرخ ارز، تضمین اصالت کالا و ارسال اکسپرس به دست شما
-            می‌رسانیم.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-fade-in [animation-delay:300ms]">
-            <Link href="/order">
-              <Button
-                size="lg"
-                className="h-14 px-8 text-lg font-bold gap-3 shadow-xl hover:shadow-2xl transition-all bg-primary hover:bg-primary/90 rounded-2xl"
-              >
-                <IconShoppingCart size={22} />
-                شروع سفارش‌گذاری
-              </Button>
-            </Link>
-
-            <Link
-              href="https://www.amazon.ae"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-14 px-8 text-lg font-medium gap-3 border-primary/30 hover:bg-primary/5 hover:border-primary/50 rounded-2xl"
-              >
-                <IconWorld size={22} />
-                مشاهده آمازون امارات
-              </Button>
-            </Link>
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-8 text-sm text-muted-foreground animate-fade-in [animation-delay:400ms]">
-            {[
-              "بدون هزینه گمرکی پنهان",
-              "تحویل ۱۵ تا ۲۰ روزه",
-              "۱۰۰٪ اورجینال",
-            ].map((text) => (
-              <span key={text} className="flex items-center gap-1.5">
-                <IconCheck size={16} className="text-green-500" />
-                {text}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════ 2. How It Works ════════════ */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-muted/20 to-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14 space-y-3">
-            <Badge variant="outline" className="px-3 py-1 text-xs border-primary/20">
-              🤔 نحوه کار
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-black">
-              چطور از ویژ مارکت خرید کنیم؟
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              فرآیند خرید از آمازون را برای شما به ساده‌ترین شکل ممکن
-              درآورده‌ایم.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-            {STEPS.map((item, index) => (
-              <Card
-                key={index}
-                className="relative border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300 group"
-              >
-                <CardContent className="pt-10 pb-8 px-6 text-center space-y-4">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300 group-hover:scale-110">
-                    <item.icon size={30} className="text-primary" />
-                  </div>
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
-                    {item.step}
-                  </div>
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {item.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════ 3. Features ════════════ */}
-      <section className="py-20 md:py-28 border-y border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14 space-y-3">
-            <Badge variant="outline" className="px-3 py-1 text-xs border-primary/20">
-              ✨ مزایا
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-black">چرا ویژ مارکت؟</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              ما با حذف واسطه‌ها، خریدی امن، شفاف و مقرون‌به‌صرفه را برای شما
-              فراهم می‌کنیم.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((feature, index) => (
-              <div
-                key={index}
-                className="group bg-background p-7 rounded-2xl border border-border/50 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center mb-5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all group-hover:scale-110">
-                  <feature.icon size={26} className="text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════ 4. Bottom CTA ════════════ */}
-      <section className="relative overflow-hidden py-20 md:py-28">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/90" />
-        <div className="absolute top-10 right-10 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 left-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
-
-        <div className="container mx-auto px-4 text-center space-y-6 relative z-10">
-          <Badge className="bg-white/15 text-white hover:bg-white/20 border-0 px-4 py-1.5">
-            🎯 آماده خرید هستید؟
+/* ── Hero banner ── */
+function HeroBanner() {
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary via-primary/95 to-primary/80 text-white">
+      <div className="absolute -left-10 -top-10 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
+      <div className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-white/5 blur-2xl" />
+      <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-3 text-center md:text-start">
+          <Badge className="bg-white/15 text-white hover:bg-white/20 border-0">
+            🔥 فروش ویژه امروز
           </Badge>
-          <h2 className="text-3xl md:text-5xl font-black text-white">
-            آماده‌اید اولین خرید خود را انجام دهید؟
-          </h2>
-          <p className="text-white/80 max-w-2xl mx-auto text-lg">
-            همین حالا لینک محصول مورد نظر خود را وارد کنید و قیمت نهایی آن را به
-            تومان مشاهده نمایید.
+          <h1 className="text-3xl md:text-4xl font-black leading-tight">
+            خرید آسان، ارسال سریع
+          </h1>
+          <p className="text-white/85 max-w-md mx-auto md:mx-0">
+            کفش، پوشاک و لوازم خانگی با تضمین اصالت — هر آنچه نیاز دارید همینجاست.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link href="/order">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="h-14 px-8 text-lg font-bold gap-3 bg-white text-primary hover:bg-white/90 shadow-2xl rounded-2xl"
-              >
-                <IconLink size={22} />
-                ورود به بخش سفارش‌گذاری
-                <IconArrowLeft size={20} className="rotate-180" />
-              </Button>
+        </div>
+        <div className="shrink-0">
+          <Link href="/store">
+            <span className="inline-flex items-center gap-2 h-12 px-6 rounded-2xl bg-white text-primary font-bold shadow-lg">
+              <IconShoppingCart size={20} />
+              ورود به فروشگاه
+            </span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Product row section (per category OR best sellers) ── */
+function ProductRow({ title, subtitle, linkHref, linkLabel = "مشاهده همه", products }) {
+  if (!products.length) return null;
+  return (
+    <section className="bg-background rounded-2xl border border-border/50 py-5">
+      <div className="flex items-center justify-between px-5 mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base md:text-lg font-black">{title}</h2>
+          {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
+        </div>
+        {linkHref && (
+          <Link
+            href={linkHref}
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80"
+          >
+            {linkLabel}
+            <IconChevronLeft size={14} />
+          </Link>
+        )}
+      </div>
+      <div className="flex gap-3 overflow-x-auto px-5 pb-2 snap-x">
+        {products.map((product) => (
+          <div key={product.id} className="shrink-0 w-40 sm:w-44 snap-start">
+            <SectionProductCard product={product} horizontal />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default function LandingPage({ sections = [], bestSellers = [], categories = [] }) {
+  return (
+    <div dir="rtl" className="w-full">
+      <div className="container mx-auto px-4 lg:px-8 py-4 space-y-5">
+        {/* Service strip above everything, digikala-style */}
+        <div className="flex justify-around bg-background rounded-2xl border border-border/50 py-3 px-2">
+          {SERVICE_STRIPS.map((s, i) => (
+            <div key={s.title} className="flex items-center gap-2 text-center px-2 justify-center">
+              <s.icon size={18} className="text-primary shrink-0" />
+              <div className="hidden sm:block text-start">
+                <p className="text-[11px] font-bold leading-4">{s.title}</p>
+                <p className="text-[10px] text-muted-foreground leading-4">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Hero banner */}
+        <HeroBanner />
+
+        {/* Category icon strip */}
+        <CategoryStrip categories={categories} />
+
+        {/* Best sellers */}
+        <ProductRow
+          title="پرفروش‌ترین‌ها"
+          subtitle="محبوب‌ترین محصولات کاربران"
+          linkHref="/store"
+          linkLabel="مشاهده همه"
+          products={bestSellers}
+        />
+
+        {/* Big featured category banner (hero of the categories area) */}
+        {categories.length > 0 && (
+          <section className="bg-muted/40 rounded-2xl border border-border/50 p-6 text-center">
+            <h2 className="text-lg font-black mb-1">دسته‌بندی‌های ویژه</h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              از میان دسته‌بندی‌های محبوب ما انتخاب کنید
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/store/${cat.slug}`}
+                  className="flex flex-col items-center gap-2 w-24"
+                >
+                  <span className="w-20 h-20 rounded-2xl overflow-hidden bg-muted">
+                    {cat.image ? (
+                      <img src={cat.image} alt={cat.name} width={80} height={80} loading="lazy" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-3xl">🛒</span>
+                    )}
+                  </span>
+                  <span className="text-[11px] font-medium text-center line-clamp-2">
+                    {cat.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Per-category product rows */}
+        {sections.map((sec) => (
+          <ProductRow
+            key={sec.category.id}
+            title={sec.category.name}
+            linkHref={`/store/${sec.category.slug}`}
+            products={sec.products}
+          />
+        ))}
+
+        {/* Bottom CTA on brand color */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary via-primary/95 to-primary/80">
+          <div className="absolute top-8 right-8 w-40 h-40 rounded-full bg-white/5 blur-2xl" />
+          <div className="relative p-8 md:p-12 text-center space-y-4">
+            <div className="flex items-center justify-center gap-2 font-black text-2xl text-white">
+              <IconTrendingUp size={26} />
+              آماده‌اید خرید را شروع کنید؟
+            </div>
+            <p className="text-white/85 max-w-md mx-auto text-sm">
+              صدها محصول با کیفیت، منتظر شما هستند — همین حالا وارد فروشگاه شوید.
+            </p>
+            <Link href="/store">
+              <span className="inline-flex items-center gap-2 h-12 px-8 rounded-2xl bg-white text-primary font-bold shadow-xl">
+                <IconShoppingCart size={20} />
+                شروع خرید
+              </span>
             </Link>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

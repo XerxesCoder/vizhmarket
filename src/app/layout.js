@@ -3,8 +3,6 @@ import "./globals.css";
 import { DirectionProvider } from "@/components/ui/direction";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 
 const Vazir = Vazirmatn({
   variable: "--font-vazir",
@@ -33,10 +31,7 @@ export default function RootLayout({ children }) {
           disableTransitionOnChange
         >
           <DirectionProvider direction="rtl">
-            <TooltipProvider>
-              <Header /> {children}
-              <Footer />
-            </TooltipProvider>
+            <TooltipProvider>{children}</TooltipProvider>
           </DirectionProvider>
         </ThemeProvider>
       </body>
