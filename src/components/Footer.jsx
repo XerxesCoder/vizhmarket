@@ -1,3 +1,5 @@
+"use client";
+import { getCurrentPersianYear } from "@/lib/utils";
 import {
   IconBrandInstagram,
   IconBrandTelegram,
@@ -21,7 +23,6 @@ const FOOTER_SECTIONS = [
       { label: "پرسش‌های متداول", href: "#" },
       { label: "رویه بازگرداندن کالا", href: "#" },
       { label: "شرایط استفاده", href: "#" },
-      { label: "گزارش باگ", href: "#" },
     ],
   },
   {
@@ -34,58 +35,51 @@ const FOOTER_SECTIONS = [
   },
 ];
 
-export default function Footer({ categories = [] }) {
-  // Build category links from real categories (roots + their children)
-  const categoryLinks = categories.flatMap((cat) => [
-    { label: cat.name, href: `/store/${cat.slug}` },
-    ...cat.children.map((child) => ({ label: `${cat.name} — ${child.name}`, href: `/store/${child.slug}` })),
-  ]);
-  const dynamicSections = categoryLinks.length > 0
-    ? [{ title: "دسته‌بندی‌ها", links: categoryLinks }]
-    : [{ title: "دسترسی سریع", links: [{ label: "فروشگاه", href: "/store" }, { label: "سفارش از آمازون", href: "/order" }] }];
-  const sections = [...dynamicSections, ...FOOTER_SECTIONS];
-
+export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-border/50 bg-gradient-to-b from-background to-muted/20" dir="rtl">
+    <footer
+      className="mt-auto border-t border-border/50 bg-linear-to-b from-background to-muted/20"
+      dir="rtl"
+    >
       {/* Top accent bar */}
-      <div className="h-1 bg-gradient-to-l from-primary/40 via-primary/20 to-transparent" />
+      <div className="h-1 bg-linear-to-l from-primary/40 via-primary/20 to-transparent" />
 
-      <div className="container mx-auto px-4 lg:px-8">
-        {/* Brand Section */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-10 border-b border-border/50">
-          <div className="flex items-center gap-4">
+      <div className="container mx-auto px-4">
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-12">
+          {/* 1. Brand Section (Right Side in RTL) */}
+          <div className="flex flex-col gap-4">
             <span className="text-3xl font-black text-primary tracking-tighter">
               ویژ مارکت
             </span>
-            <div className="h-10 w-px bg-border/50 hidden md:block" />
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               <span className="text-sm text-muted-foreground">
                 تجربه‌ای متفاوت از خرید آنلاین
               </span>
-              <span className="text-base font-bold text-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 تضمین بهترین قیمت و کیفیت
               </span>
             </div>
-          </div>
-          <div className="flex gap-2">
-            {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2.5 bg-background rounded-xl border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 hover:shadow-sm transition-all"
-                aria-label={label}
-              >
-                <Icon size={18} />
-              </a>
-            ))}
-          </div>
-        </div>
 
-        {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10">
-          {sections.map((section) => (
+            {/* Social Links next to brand */}
+            <div className="flex gap-2 mt-2">
+              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-background rounded-lg border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 hover:shadow-sm transition-all"
+                  aria-label={label}
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* 2. Services Links */}
+          {FOOTER_SECTIONS.map((section) => (
             <div key={section.title}>
               <h3 className="font-bold text-sm mb-4 text-foreground">
                 {section.title}
@@ -106,47 +100,33 @@ export default function Footer({ categories = [] }) {
             </div>
           ))}
 
-          {/* Trust & Social */}
+          {/* 3. Trust Badges (Left Side in RTL) */}
           <div>
             <h3 className="font-bold text-sm mb-4 text-foreground">
-              همراه ما باشید
+              نمادهای اعتماد
             </h3>
-
-            <div className="flex gap-2 mb-6">
-              {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-background rounded-xl border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 hover:shadow-sm transition-all"
-                  aria-label={label}
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
-            </div>
-
-            {/* Trust Badges */}
             <div className="flex gap-3">
-              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[9px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
+              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
                 <span className="text-primary text-lg font-black">e</span>
-                نماد الکترونیک
+                <span className="text-center leading-tight">
+                  نماد
+                  <br />
+                  الکترونیک
+                </span>
               </div>
-              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[9px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
+              <div className="size-20 bg-background rounded-2xl border border-border/50 flex flex-col items-center justify-center gap-1 text-[10px] text-muted-foreground font-bold hover:border-primary/20 transition-colors">
                 <span className="text-primary text-lg font-black">S</span>
-                ساماندهی
+                <span className="text-center leading-tight">ساماندهی</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Copyright */}
-        <div className="py-8 border-t border-border/50">
+        <div className="py-2 border-t border-border/50">
           <p className="text-xs text-muted-foreground/70 text-center leading-relaxed">
-            استفاده از مطالب فروشگاه اینترنتی ویژ مارکت فقط برای مقاصد غیرتجاری و
-            با ذکر منبع بلامانع است. کلیه حقوق این سایت متعلق به فروشگاه آنلاین
-            ویژ مارکت می‌باشد. © ۱۴۰۳
+            کلیه حقوق این سایت متعلق به فروشگاه آنلاین ویژ مارکت می‌باشد. ©{" "}
+            {getCurrentPersianYear()}
           </p>
         </div>
       </div>

@@ -46,6 +46,18 @@ function ProductFields({ product, categories }) {
         placeholder="nike-air-max"
         required
       />
+      <TextField
+        label="برند (اختیاری)"
+        name="brand"
+        defaultValue={product?.brand}
+        placeholder="Nike"
+      />
+      <TextField
+        label="لینک فروشگاه اصلی (اختیاری)"
+        name="url"
+        defaultValue={product?.url}
+        placeholder="https://www.amazon.com/dp/..."
+      />
       <TextareaField
         label="تصاویر (هر مسیر در یک خط)"
         name="images"

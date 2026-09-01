@@ -1,0 +1,51 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env
+- Cache Components enabled
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.2s
+  Running TypeScript ...
+  Finished TypeScript in 116ms ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/26) ...
+  Generating static pages using 11 workers (6/26) 
+  Generating static pages using 11 workers (12/26) 
+  Generating static pages using 11 workers (19/26) 
+✓ Generating static pages using 11 workers (26/26) in 6.7s
+  Finalizing page optimization ...
+
+Route (app)                          Revalidate  Expire
+┌ ○ /                                       30d      1y
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /admin/categories                       30d      1y
+├ ○ /admin/orders                           30d      1y
+├ ○ /admin/products                         30d      1y
+├ ○ /admin/users                            30d      1y
+├ ○ /admin/weborders
+├ ƒ /api/payments/callback
+├ ○ /cart                                   30d      1y
+├ ○ /checkout                               30d      1y
+├ ◐ /checkout/result                        30d      1y
+├ ○ /login                                  30d      1y
+├ ○ /order                                  30d      1y
+├ ◐ /profile                                30d      1y
+├ ○ /robots.txt
+├ ƒ /sitemap.xml
+├ ◐ /store                                  30d      1y
+├ ◐ /store/[category]                       30d      1y
+│ ├ /store/[category]                       30d      1y
+│ ├ /store/shoes-bag                        30d      1y
+│ └ /store/men-shoes                        30d      1y
+└ ◐ /store/[category]/[product]             30d      1y
+  ├ /store/[category]/[product]             30d      1y
+  ├ /store/men-shoes/[product]
+  └ /store/men-shoes/nike-air-force         30d      1y
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand
+

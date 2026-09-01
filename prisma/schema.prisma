@@ -31,16 +31,24 @@ model ExchangeRate {
 }
 
 model User {
-  id    String @id @default(cuid())
+  id    String  @id @default(cuid())
   name  String
-  phone String @unique
-  email String @unique
-  role  Role   @default(USER)
+  phone String  @unique
+  email String?
+  role  Role    @default(USER)
 
-  // Relations to split order models
   storeOrders StoreOrder[]
   webOrders   WebOrder[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpToken {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  token     String
+  expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -49,28 +57,32 @@ model Category {
   id    String  @id @default(cuid())
   name  String
   slug  String  @unique
-  image String? // Category thumbnail/banner image
+  image String?
 
   parentId String?
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
   children Category[] @relation("CategoryTree")
 
   products Product[]
+
+  @@index([parentId])
 }
 
 model Product {
   id    String  @id @default(cuid())
   title String
-  slug  String  @unique // Added for SEO-friendly URLs
-  sku   String? @unique // Added for inventory management
+  slug  String  @unique
+  sku   String? @unique
+  brand String?
 
   description String?
-  images      String[] // One or more product images
-  // Product specifications, each entry stored as "key: value" (e.g. "وزن: 2.5 کیلوگرم")
-  specs       String[] @default([])
-  isExpress   Boolean  @default(false)
-  isActive    Boolean  @default(true) // Admin toggle; inactive products are hidden from the store
-  totalSold   Int      @default(0) // Incremented when an order containing this product is placed
+  url         String?
+  images      String[]
+
+  specs     String[] @default([])
+  isExpress Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  totalSold Int      @default(0)
 
   categoryId      String
   category        Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -79,23 +91,24 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([categoryId, isActive])
+  @@index([isExpress])
 }
 
-// ==========================================
-// PRODUCT VARIANT (Size / Color / Model ...)
-// ==========================================
 model ProductVariant {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // Flexible specs: any key/value pairs (رنگ: قرمز, سایز: 42, توان: 2200W ...)
   attributes VariantAttribute[]
 
   sku       String?  @unique
-  images    String[] // Variant-specific images
-  aedPrice  Float // Variant price in AED (variants carry the price)
-  irrPrice  Float // Variant price in IRR (converted)
+  images    String[]
+  aedPrice  Float
+  irrPrice  Float
   stock     Int      @default(0)
   isDefault Boolean  @default(false)
 
@@ -103,48 +116,46 @@ model ProductVariant {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([isDefault])
 }
 
-// One spec entry of a variant (key/value)
 model VariantAttribute {
   id        String         @id @default(cuid())
   variantId String
   variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-  key   String // e.g. "رنگ" / "Color"
-  value String // e.g. "قرمز" / "Red"
+  key   String
+  value String
+
+  @@index([variantId])
+  @@index([key, value])
 }
 
-// ==========================================
-// 1. STORE ORDER (Buying directly from you)
-// ==========================================
 model StoreOrder {
-  id String @id @default(cuid())
-
-  // --- User Relation ---
+  id     Int     @id @default(autoincrement())
   userId String?
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull) // Preserves order if user is deleted
 
-  // --- Order Items ---
-  items StoreOrderItem[]
-
-  // --- Customer Info (Guest Checkout Supported) ---
-  customerName    String
-  customerPhone   String
-  customerEmail   String? // Optional for guest checkout
   shippingAddress String
+  note            String?
+  items           StoreOrderItem[]
+  zarinpalref     String?          @unique
+  zarinpalauth    String?          @unique
 
-  // --- Status ---
   status OrderStatus @default(SUBMITTED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
-// One line per product/variant inside a StoreOrder
 model StoreOrderItem {
   id      String     @id @default(cuid())
-  orderId String
+  orderId Int
   order   StoreOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   productId String
@@ -154,46 +165,41 @@ model StoreOrderItem {
 
   quantity Int @default(1)
 
-  // --- Price Snapshot at purchase time ---
   unitAedPrice Float
   unitIrrPrice Float
 
   createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
 }
 
-// ==========================================
-// 2. AMAZON ORDER (Concierge / Proxy Buying)
-// ==========================================
 model WebOrder {
   id String @id @default(cuid())
 
-  userId         String?
-  user           User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  store          String?
-  // --- Request Details ---
-  requestedUrl   String // The URL the user submitted
-  requestedTitle String? // Optional title provided by user
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  store  String?
 
-  // --- Fulfillment Tracking (Admin updates these) ---
-  actualUrl      String? // The actual URL purchased by admin (if different)
-  actualAedCost  Float? // The real cost paid by admin in AED
-  trackingNumber String? // Shipping tracking number
+  requestedUrl   String
+  requestedTitle String?
 
-  // --- Pricing Snapshot (Estimate at submission) ---
-  quantity      Int     @default(1)
-  unitAedPrice  Decimal // Estimated/agreed AED price at checkout
-  unitIrrRate   Float // Exchange rate at the time of order
-  totalIrrPrice Float // Estimated total in IRR
+  actualUrl      String?
+  actualAedCost  Float?
+  trackingNumber String?
 
-  // --- Customer Info (Guest Checkout Supported) ---
-  customerName    String
-  customerPhone   String
-  customerEmail   String? // Optional for guest checkout
+  quantity        Int     @default(1)
+  unitAedPrice    Decimal
+  unitIrrRate     Float
+  totalIrrPrice   Float
   shippingAddress String
 
-  // --- Status ---
   status OrderStatus @default(SUBMITTED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }

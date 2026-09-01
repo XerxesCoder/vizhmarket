@@ -14,7 +14,6 @@ export function ModeToggle() {
       variant="outline"
       size="icon"
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="rounded-xl h-11 w-11"
       aria-label="تغغیر تم"
     >
       {theme === "light" ? (

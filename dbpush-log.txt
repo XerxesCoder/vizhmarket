@@ -1,0 +1,14 @@
+Loaded Prisma config from prisma7.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "postgres", schema "public" at "db.prisma.io:5432"
+
+⚠️  There might be data loss when applying the changes:
+
+  • A unique constraint covering the columns `[zarinpalref]` on the table `StoreOrder` will be added. If there are existing duplicate values, this will fail.
+
+  • A unique constraint covering the columns `[zarinpalauth]` on the table `StoreOrder` will be added. If there are existing duplicate values, this will fail.
+
+
+
+[?25l[2K[1G[36m?[39m [1mDo you want to ignore the warning(s)?[22m [90m»[39m [90m(y/N)[39m

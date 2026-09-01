@@ -75,7 +75,9 @@ export default function OrderManager({ orders }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-lg">سفارش‌های فروشگاه ({orders.length})</h2>
+        <h2 className="font-bold text-lg">
+          سفارش‌های فروشگاه ({orders.length})
+        </h2>
       </div>
 
       <Table>
@@ -93,40 +95,59 @@ export default function OrderManager({ orders }) {
         <TableBody>
           {orders.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+              <TableCell
+                colSpan={7}
+                className="text-center text-muted-foreground py-10"
+              >
                 سفارشی وجود ندارد
               </TableCell>
             </TableRow>
           )}
           {orders.map((order) => {
-            const totalIrr = order.items.reduce((s, i) => s + i.unitIrrPrice, 0);
+            const totalIrr = order.items.reduce(
+              (s, i) => s + i.unitIrrPrice,
+              0,
+            );
             const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
             const meta = STATUS_META[order.status] || STATUS_META.SUBMITTED;
             return (
               <TableRow key={order.id}>
                 <TableCell dir="ltr" className="text-xs text-muted-foreground">
-                  {order.id.slice(-8)}
+                  {order.id}
                 </TableCell>
                 <TableCell>
                   <div className="min-w-0">
                     <p className="font-medium">{order.customerName}</p>
-                    <p className="text-xs text-muted-foreground" dir="ltr">{order.customerPhone}</p>
+                    <p className="text-xs text-muted-foreground" dir="ltr">
+                      {order.customerPhone}
+                    </p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1 max-w-56">
                     {order.items.map((item) => (
-                      <span key={item.id} className="text-xs flex items-center gap-1">
+                      <span
+                        key={item.id}
+                        className="text-xs flex items-center gap-1"
+                      >
                         <span className="truncate">{item.product?.title}</span>
                         {item.variant?.attributes?.length ? (
                           <span className="text-muted-foreground">
-                            ({item.variant.attributes.map((a) => a.value).join(" / ")})
+                            (
+                            {item.variant.attributes
+                              .map((a) => a.value)
+                              .join(" / ")}
+                            )
                           </span>
                         ) : null}
-                        <Badge variant="outline" className="px-1.5 text-[10px]">×{item.quantity}</Badge>
+                        <Badge variant="outline" className="px-1.5 text-[10px]">
+                          ×{item.quantity}
+                        </Badge>
                       </span>
                     ))}
-                    <span className="text-[10px] text-muted-foreground">{formatIrr(totalQty)} کالا</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {formatIrr(totalQty)} کالا
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell className="font-semibold text-primary whitespace-nowrap">
@@ -146,7 +167,7 @@ export default function OrderManager({ orders }) {
                     action={deleteOrder}
                     id={order.id}
                     title="حذف سفارش"
-                    description={`آیا از حذف سفارش «${order.id.slice(-8)}» مطمئن هستید؟`}
+                    description={`آیا از حذف سفارش «${order.id}» مطمئن هستید؟`}
                   />
                 </TableCell>
               </TableRow>
