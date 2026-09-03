@@ -17,7 +17,9 @@ import {
   IconMenu2,
   IconSparkles,
   IconCoin,
+  IconRefresh,
 } from "@tabler/icons-react";
+import { revalidateAllTags, revalidateWebTags } from "@/lib/actions/admin-actions";
 
 const ADMIN_LINKS = [
   { href: "/admin", label: "داشبورد", icon: IconLayoutDashboard, exact: true },
@@ -35,24 +37,22 @@ function NavLinks({ pathname, onNavigate }) {
       {ADMIN_LINKS.map(({ href, label, icon: Icon, exact }) => {
         const active = exact ? pathname === href : pathname.startsWith(href);
         return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              active
-                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-            )}
-          >
-            <Icon size={18} className={cn(active && "text-primary-foreground")} />
-            {label}
+          <Link key={href} href={href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={cn("flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", active ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>
+            <Icon size={18} className={cn(active && "text-primary-foreground")} />{label}
           </Link>
         );
       })}
     </>
+  );
+}
+function RefreshButtons() {
+  const [p1, s1] = React.useTransition();
+  const [p2, s2] = React.useTransition();
+  return (
+    <div className="flex flex-col gap-2">
+      <Button variant="outline" size="sm" className="w-full justify-start gap-2 rounded-xl text-xs" disabled={p1} onClick={() => s1(async () => { await revalidateWebTags(); })}><IconRefresh size={14} className={p1 ? "animate-spin" : ""} /> بروزرسانی وب</Button>
+      <Button variant="outline" size="sm" className="w-full justify-start gap-2 rounded-xl text-xs" disabled={p2} onClick={() => s2(async () => { await revalidateAllTags(); })}><IconRefresh size={14} className={p2 ? "animate-spin" : ""} /> بروزرسانی همه</Button>
+    </div>
   );
 }
 
@@ -76,7 +76,8 @@ export default function AdminSidebar() {
             <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto">
               <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
             </nav>
-            <div className="p-3 border-t">
+            <div className="p-3 border-t flex flex-col gap-2">
+              <RefreshButtons />
               <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
                 <IconHome size={18} /> بازگشت به سایت
               </Link>
@@ -86,7 +87,6 @@ export default function AdminSidebar() {
         <span className="font-bold text-sm">پنل مدیریت</span>
       </div>
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col sticky top-0 h-screen border-l bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/80">
         <div className="p-6 border-b">
           <Link href="/admin" className="flex items-center gap-2.5 font-black text-lg tracking-tight">
@@ -98,7 +98,8 @@ export default function AdminSidebar() {
         <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto">
           <NavLinks pathname={pathname} />
         </nav>
-        <div className="p-3 border-t">
+        <div className="p-3 border-t flex flex-col gap-2">
+          <RefreshButtons />
           <Link href="/" className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <IconHome size={18} /> بازگشت به سایت
           </Link>

@@ -534,12 +534,14 @@ export async function recalculateVariantPrices(rate) {
   return { success: true, count: variants.length };
 }
 
+export async function revalidateWebTags() {
+  "use server";
+  for (const t of Object.values(cacheTags)) updateTag(t);
+  return { success: true };
+}
 export async function revalidateAllTags() {
   "use server";
-  const tags = new Set([
-    ...Object.values(cacheTags),
-    ...Object.values(adminTags),
-  ]);
-  tags.forEach((t) => revalidateTag(t));
+  const tags = new Set([...Object.values(cacheTags), ...Object.values(adminTags)]);
+  for (const t of tags) updateTag(t);
   return { success: true, tags: [...tags] };
 }
