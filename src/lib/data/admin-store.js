@@ -6,7 +6,16 @@ export const adminTags = {
   categories: "categories",
   orders: "orders",
   users: "users",
+  exchangeRate: "exchangeRate",
 };
+
+export async function getExchangeRate() {
+  "use cache";
+  cacheTag(adminTags.exchangeRate);
+  cacheLife("max");
+  const rate = await prisma.exchangeRate.findFirst({ where: { isActive: true }, orderBy: { updatedAt: "desc" } });
+  return rate?.aedToIrr ?? null;
+}
 
 // ── /admin/products ──
 export async function getAdminProducts() {
@@ -41,9 +50,11 @@ export async function getAdminOrders() {
   cacheLife("max");
   return prisma.storeOrder.findMany({
     include: {
+      // Customer fields live on the `user` relation (StoreOrder has no name/phone columns).
+      user: { select: { id: true, name: true, phone: true, email: true } },
       items: {
         include: {
-          product: { select: { title: true } },
+          product: { select: { title: true, slug: true, images: true } },
           variant: { include: { attributes: true } },
         },
       },
@@ -57,7 +68,47 @@ export async function getAdminUsers() {
   "use cache";
   cacheTag(adminTags.users);
   cacheLife("max");
-  return prisma.user.findMany({ orderBy: { createdAt: "desc" } });
+  return prisma.user.findMany({
+    include: {
+      storeOrders: {
+        include: {
+          items: {
+            include: {
+              product: { select: { title: true } },
+              variant: { include: { attributes: true } },
+            },
+          },
+        },
+      },
+      webOrders: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// ── /admin/users/[id] ── user profile + full order history (store + web)
+export async function getAdminUserOrders(id) {
+  "use cache";
+  cacheTag(adminTags.users, adminTags.orders);
+  cacheLife("max");
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: {
+      storeOrders: {
+        include: {
+          items: {
+            include: {
+              product: { select: { title: true, slug: true, images: true } },
+              variant: { include: { attributes: true } },
+            },
+          },
+          //orderBy: { createdAt: "desc" },
+        },
+      },
+      webOrders: true,
+    },
+  });
+  return user;
 }
 
 // ── /admin dashboard stats ──
@@ -65,12 +116,11 @@ export async function getAdminStats() {
   "use cache";
   cacheTag(adminTags.products, adminTags.categories, adminTags.orders, adminTags.users);
   cacheLife("max");
-  const [products, categories, orders, users, variants] = await Promise.all([
+  const [products, users, pendingOrders, totalSoldAgg] = await Promise.all([
     prisma.product.count(),
-    prisma.category.count(),
-    prisma.storeOrder.count(),
     prisma.user.count(),
-    prisma.productVariant.count(),
+    prisma.storeOrder.count({ where: { status: "SUBMITTED" } }),
+    prisma.storeOrderItem.aggregate({ _sum: { unitIrrPrice: true } }),
   ]);
-  return { products, categories, orders, users, variants };
+  return { products, users, pendingOrders, totalSold: totalSoldAgg._sum.unitIrrPrice || 0 };
 }

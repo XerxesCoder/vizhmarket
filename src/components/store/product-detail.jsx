@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useCartStore } from "@/lib/cart-store";
 import {
   Table,
@@ -15,22 +17,21 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { SectionProductCard } from "@/components/store/section-product-card";
 import {
   IconShoppingCart,
   IconBolt,
   IconPackageOff,
-  IconChevronLeft,
   IconCheck,
   IconExternalLink,
   IconPlus,
   IconMinus,
+  IconTruck,
 } from "@tabler/icons-react";
 
 function formatIrr(value) {
   return new Intl.NumberFormat("fa-IR").format(Math.round(value));
 }
-
-// Splits a stored "key: value" spec entry into { key, value } for the table.
 function splitSpec(entry) {
   const idx = entry.indexOf(":");
   if (idx === -1) return { key: entry.trim(), value: "" };
@@ -40,7 +41,6 @@ function splitSpec(entry) {
   };
 }
 
-// Shared quantity stepper (used inline + in the mobile sticky bar)
 function QuantityStepper({ quantity, setQuantity, stock, compact = false }) {
   const btn =
     "flex items-center justify-center rounded-lg border border-border text-foreground/80 hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -91,24 +91,22 @@ export default function ProductDetail({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
-  // Price, stock & gallery all come from the selected variant
   const selectedVariant = useMemo(
     () => product.variants.find((v) => v.id === selectedVariantId) ?? null,
     [product.variants, selectedVariantId],
   );
+  const gallery = useMemo(() => {
+    const variantImgs = product.variants.flatMap((v) => v.images ?? []);
+    const combined = [...(product.images ?? []), ...variantImgs];
+    const deduped = [...new Set(combined)];
+    if (selectedVariant?.images?.length) {
+      const vImgs = selectedVariant.images;
+      return [...vImgs, ...deduped.filter((x) => !vImgs.includes(x))];
+    }
+    return deduped;
+  }, [product]);
 
-  // Gallery: variant images take priority when a variant is selected, otherwise product images
-  const gallery = useMemo(
-    () =>
-      selectedVariant?.images?.length > 0
-        ? selectedVariant.images
-        : product.images?.length > 0
-          ? product.images
-          : [],
-    [selectedVariant, product.images],
-  );
   const mainImage = gallery[Math.min(activeImage, gallery.length - 1)];
-
   const irrPrice = useMemo(
     () => (selectedVariant ? selectedVariant.irrPrice || null : null),
     [selectedVariant],
@@ -122,12 +120,13 @@ export default function ProductDetail({ product }) {
     [selectedVariant],
   );
   const inStock = stock > 0;
-
-  // Clamp the stored quantity to what the selected variant can actually supply
   const maxQty = Math.max(1, stock);
   const qty = Math.min(quantity, maxQty);
   const totalIrr = irrPrice != null ? irrPrice * qty : null;
-  // Mobile sticky bar: show when the inline add-to-cart button scrolls out of view
+  const deliveryText = product.isExpress
+    ? "ارسال ۱ تا ۳ روز کاری"
+    : "ارسال ۱۵ تا ۳۰ روز کاری";
+
   const ctaRef = useRef(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   useEffect(() => {
@@ -144,7 +143,6 @@ export default function ProductDetail({ product }) {
   const addItem = useCartStore((s) => s.addItem);
   const [justAdded, setJustAdded] = useState(false);
   const addedTimer = useRef(null);
-
   function handleAddToCart() {
     if (!selectedVariant) return;
     addItem({
@@ -165,26 +163,26 @@ export default function ProductDetail({ product }) {
     clearTimeout(addedTimer.current);
     addedTimer.current = setTimeout(() => setJustAdded(false), 2000);
   }
-
   useEffect(() => () => clearTimeout(addedTimer.current), []);
 
   return (
     <div dir="rtl" className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Gallery */}
+        {/* Gallery — object-contain, no crop, full square */}
         <div className="flex flex-col gap-3">
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-white border border-border/50 flex items-center justify-center">
             {mainImage ? (
-              <img
+              <Image
                 src={mainImage}
                 alt={product.title}
                 width={640}
                 height={640}
-                fetchPriority="high"
-                className="w-full h-full object-cover"
+                priority
+                className="w-full h-full object-contain p-4"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted">
                 <IconPackageOff size={48} />
               </div>
             )}
@@ -203,19 +201,16 @@ export default function ProductDetail({ product }) {
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
-                  className={`shrink-0 h-16 w-16 rounded-xl overflow-hidden border-2 transition-colors ${
-                    i === activeImage
-                      ? "border-primary"
-                      : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
+                  aria-label={`تصویر ${i + 1}`}
+                  className={`shrink-0 h-16 w-16 rounded-xl overflow-hidden border-2 bg-white transition-colors ${i === activeImage ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"}`}
                 >
-                  <img
+                  <Image
                     src={img}
-                    alt={product.title}
+                    alt={`${product.title} ${i + 1}`}
                     width={64}
                     height={64}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain p-1"
                   />
                 </button>
               ))}
@@ -238,7 +233,7 @@ export default function ProductDetail({ product }) {
                 </span>
               </p>
             )}
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-2 mt-2">
               {product.sku && (
                 <p className="text-xs text-muted-foreground" dir="ltr">
                   SKU: {product.sku}
@@ -249,6 +244,9 @@ export default function ProductDetail({ product }) {
                   {formatIrr(product.totalSold)} فروش
                 </Badge>
               )}
+              <Badge variant="outline" className="gap-1 text-xs">
+                <IconTruck size={14} /> {deliveryText}
+              </Badge>
             </div>
             {product.url && (
               <a
@@ -257,13 +255,11 @@ export default function ProductDetail({ product }) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-2 w-fit focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded"
               >
-                <IconExternalLink size={14} />
-                مشاهده در فروشگاه اصلی
+                <IconExternalLink size={14} /> مشاهده در فروشگاه اصلی
               </a>
             )}
           </div>
 
-          {/* Variant selector */}
           {product.variants.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold">انتخاب ویژگی:</p>
@@ -282,11 +278,7 @@ export default function ProductDetail({ product }) {
                         setQuantity(1);
                       }}
                       disabled={disabled}
-                      className={`relative px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed"
-                      }`}
+                      className={`relative px-4 py-2 rounded-xl border-2 text-sm font-medium transition-all ${isSelected ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50 disabled:opacity-40 disabled:cursor-not-allowed"}`}
                     >
                       {label}
                       {isSelected && (
@@ -302,7 +294,6 @@ export default function ProductDetail({ product }) {
             </div>
           )}
 
-          {/* Price + stock + quantity */}
           <Card>
             <CardContent className="flex flex-col gap-3 p-4">
               <div className="flex items-center justify-between gap-4">
@@ -358,6 +349,10 @@ export default function ProductDetail({ product }) {
             </CardContent>
           </Card>
 
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <IconTruck size={14} /> {deliveryText}
+          </p>
+
           <Button
             ref={ctaRef}
             size="lg"
@@ -366,105 +361,60 @@ export default function ProductDetail({ product }) {
             className="gap-2 w-full md:w-auto"
           >
             <IconShoppingCart size={20} />
-            {justAdded ? "به سبد اضافه شد ✓" : inStock ? "افزودن به سبد خرید" : "ناموجود"}
+            {justAdded
+              ? "به سبد اضافه شد ✓"
+              : inStock
+                ? "افزودن به سبد خرید"
+                : "ناموجود"}
           </Button>
 
-          {product.description && (
-            <>
-              <Separator />
-              <div>
-                <h2 className="font-bold mb-2">توضیحات</h2>
-                <p className="text-sm leading-7 text-foreground/80 whitespace-pre-line">
-                  {product.description}
-                </p>
-              </div>
-            </>
-          )}
         </div>
       </div>
 
-      {product.specs?.length > 0 && (
-        <div className="mt-10">
+      {(product.description || product.specs?.length > 0) && (
+        <div className="mt-10 col-span-full">
           <Separator />
-          <div className="mt-6">
-            <h2 className="font-bold mb-4">مشخصات محصول</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {/*           <TableHead className="w-1/2">ویژگی</TableHead>
-                  <TableHead>مقدار</TableHead> */}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {product.specs.map((spec, i) => {
-                  const { key, value } = splitSpec(spec);
-                  return (
-                    <TableRow key={i}>
-                      <TableCell className="text-foreground/80 font-medium">
-                        {key || "—"}
-                      </TableCell>
-                      <TableCell>{value || "—"}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <Tabs defaultValue="description" className="mt-6">
+            <TabsList>
+              <TabsTrigger value="description">توضیحات</TabsTrigger>
+              <TabsTrigger value="specs">مشخصات</TabsTrigger>
+            </TabsList>
+            <TabsContent value="description" className="mt-4">
+              {product.description ? <p className="text-sm leading-7 text-foreground/80 whitespace-pre-line">{product.description}</p> : <p className="text-sm text-muted-foreground">توضیحاتی ثبت نشده است.</p>}
+            </TabsContent>
+            <TabsContent value="specs" className="mt-4">
+              {product.specs?.length > 0 ? (
+                <Table>
+                  <TableHeader><TableRow></TableRow></TableHeader>
+                  <TableBody>{product.specs.map((spec, i) => { const { key, value } = splitSpec(spec); return <TableRow key={i}><TableCell className="text-foreground/80 font-medium">{key || "—"}</TableCell><TableCell>{value || "—"}</TableCell></TableRow>; })}</TableBody>
+                </Table>
+              ) : <p className="text-sm text-muted-foreground">مشخصاتی ثبت نشده است.</p>}
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+
+      {product.related?.length > 0 && (
+        <div className="mt-12">
+          <Separator />
+          <h2 className="mt-6 text-lg font-black">محصولات مرتبط</h2>
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {product.related.map((p) => (
+              <SectionProductCard key={p.id} product={p} />
+            ))}
           </div>
         </div>
       )}
 
-      {/* Mobile sticky add-to-cart bar — appears when the inline button is scrolled past */}
-      <div
-        className={`md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 transition-transform duration-300 ${
-          showStickyBar ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        aria-hidden={!showStickyBar}
-      >
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-1.5 min-w-0">
-            {inStock ? (
-              totalIrr != null && (
-                <p className="text-base font-black text-primary tabular-nums truncate">
-                  {formatIrr(totalIrr)}
-                  <span className="text-xs font-normal ms-1">تومان</span>
-                </p>
-              )
-            ) : (
-              <Badge
-                variant="destructive"
-                className="text-xs px-2 py-0.5 w-fit"
-              >
-                ناموجود
-              </Badge>
-            )}
-            {inStock && (
-              <span className="text-[11px] text-muted-foreground">
-                تعداد: {formatIrr(qty)} از {formatIrr(stock)}
-              </span>
-            )}
+      <div className={`md:hidden fixed bottom-0 inset-x-0 z-50 bg-background border-t shadow-[0_-4px_24px_rgba(0,0,0,0.08)] transition-transform duration-300 ${showStickyBar ? "translate-y-0" : "translate-y-full"}`} style={{ paddingBottom: "env(safe-area-inset-bottom)" }} aria-hidden={!showStickyBar}>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] text-muted-foreground truncate">{product.title}</p>
+            {inStock && totalIrr != null ? <p className="text-sm font-black text-primary tabular-nums">{formatIrr(totalIrr)} <span className="text-[11px] font-normal">تومان</span></p> : <Badge variant="destructive" className="text-[11px] mt-1">ناموجود</Badge>}
           </div>
-          <div className="flex items-center gap-2">
-            {inStock && (
-              <QuantityStepper
-                quantity={qty}
-                setQuantity={setQuantity}
-                stock={maxQty}
-                compact
-              />
-            )}
-            <Button
-              disabled={!inStock}
-              onClick={handleAddToCart}
-              className="gap-1.5 px-4"
-              aria-label="افزودن به سبد خرید"
-            >
-              <IconShoppingCart size={18} />
-              <span className="hidden min-[380px]:inline">
-                {justAdded ? "اضافه شد ✓" : "افزودن به سبد"}
-              </span>
-            </Button>
-          </div>
+          <Button disabled={!inStock} onClick={handleAddToCart} size="lg" className="shrink-0 rounded-2xl px-5 h-11 text-sm font-bold">
+            <IconShoppingCart size={18} />{justAdded ? "اضافه شد ✓" : "افزودن به سبد"}
+          </Button>
         </div>
       </div>
     </div>

@@ -58,6 +58,8 @@ export default function Header({ categories = [] }) {
       setDesktopQuery("");
       router.push(`/order?url=${encodeURIComponent(trimmed)}`);
     } else {
+      setMobileQuery("");
+      setDesktopQuery("");
       router.push(`/store?search=${encodeURIComponent(trimmed)}`);
     }
   };
@@ -230,38 +232,21 @@ export default function Header({ categories = [] }) {
                       return (
                         <div key={cat.id}>
                           <div className="flex items-center">
-                            <Link
-                              href={`/store/${cat.slug}`}
-                              onClick={() => setSheetOpen(false)}
-                              className={cn(
-                                "flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors",
-                                parentActive
-                                  ? "text-primary font-semibold"
-                                  : "text-foreground/80 hover:text-foreground",
-                              )}
-                            >
-                              {cat.name}
-                            </Link>
-                            {hasChildren && (
+                            {hasChildren ? (
                               <button
-                                type="button"
                                 onClick={() => toggleCat(cat.id)}
-                                aria-label={
-                                  isExpanded
-                                    ? "بستن زیرمجموعه‌ها"
-                                    : "باز کردن زیرمجموعه‌ها"
-                                }
-                                aria-expanded={isExpanded}
-                                className="flex items-center justify-center h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                className={cn(
+                                  "flex-1 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors text-right",
+                                  parentActive ? "text-primary font-semibold" : "text-foreground/80 hover:text-foreground",
+                                )}
                               >
-                                <IconChevronDown
-                                  size={16}
-                                  className={cn(
-                                    "transition-transform duration-200",
-                                    isExpanded ? "rotate-180" : "rotate-0",
-                                  )}
-                                />
+                                {cat.name}
+                                <IconChevronDown size={16} className={cn("transition-transform duration-200", isExpanded ? "rotate-180" : "rotate-0")} />
                               </button>
+                            ) : (
+                              <Link href={`/store/${cat.slug}`} onClick={() => setSheetOpen(false)} className={cn("flex-1 px-4 py-2.5 rounded-xl text-sm transition-colors", parentActive ? "text-primary font-semibold" : "text-foreground/80 hover:text-foreground")}>
+                                {cat.name}
+                              </Link>
                             )}
                           </div>
                           {hasChildren && isExpanded && (

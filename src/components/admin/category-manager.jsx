@@ -10,7 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IconPencil, IconPlus } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconCategory, IconFolder } from "@tabler/icons-react";
 import {
   ActionDialog,
   EditActionDialog,
@@ -71,9 +71,14 @@ export default function CategoryManager({ categories }) {
   const clearSelection = () => setSelected([]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="font-bold text-lg">دسته‌بندی‌ها ({categories.length})</h2>
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold tracking-tight">دسته‌بندی‌ها</h2>
+          <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-xs tabular-nums">
+            {categories.length}
+          </Badge>
+        </div>
         <div className="flex items-center gap-2">
           <BulkDeleteDialog
             action={deleteCategories}
@@ -87,88 +92,123 @@ export default function CategoryManager({ categories }) {
             triggerVariant="default"
             triggerIcon={IconPlus}
             title="ایجاد دسته‌بندی"
+            description="یک دسته‌بندی جدید برای نمایش در فروشگاه بسازید."
             action={createCategory}
             submitLabel="ایجاد"
+            contentClassName="sm:max-w-md!"
           >
             <CategoryFields categories={categories} />
           </ActionDialog>
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">
-              <input
-                type="checkbox"
-                checked={categories.length > 0 && selected.length === categories.length}
-                onChange={toggleAll}
-                className="h-4 w-4 cursor-pointer accent-[var(--primary)]"
-              />
-            </TableHead>
-            <TableHead>نام</TableHead>
-            <TableHead>شناسه (Slug)</TableHead>
-            <TableHead>والد</TableHead>
-            <TableHead>تعداد محصول</TableHead>
-            <TableHead className="text-start">عملیات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {categories.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
-                دسته‌بندی‌ای وجود ندارد
-              </TableCell>
-            </TableRow>
-          )}
-          {categories.map((category) => (
-            <TableRow key={category.id}>
-              <TableCell>
+      <div className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">
+              <TableHead className="w-10 py-3">
                 <input
                   type="checkbox"
-                  checked={selected.includes(category.id)}
-                  onChange={() => toggle(category.id)}
-                  className="h-4 w-4 cursor-pointer accent-[var(--primary)]"
+                  checked={categories.length > 0 && selected.length === categories.length}
+                  onChange={toggleAll}
+                  aria-label="انتخاب همه"
+                  className="h-4 w-4 cursor-pointer accent-[var(--primary)] rounded"
                 />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {category.image ? (
-                    <img src={category.image} alt="" className="h-8 w-8 rounded-lg object-cover bg-muted" />
-                  ) : (
-                    <span className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm">🛒</span>
-                  )}
-                  <span className="font-medium">{category.name}</span>
-                </div>
-              </TableCell>
-              <TableCell dir="ltr" className="text-muted-foreground">{category.slug}</TableCell>
-              <TableCell>
-                {category.parentId ? (
-                  <Badge variant="outline">
-                    {categories.find((c) => c.id === category.parentId)?.name || "—"}
-                  </Badge>
-                ) : (
-                  <span className="text-muted-foreground text-xs">—</span>
-                )}
-              </TableCell>
-              <TableCell>{category._count?.products ?? 0}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <EditActionDialog title="ویرایش دسته‌بندی" triggerIcon={IconPencil} action={updateCategory}>
-                    <CategoryFields category={category} categories={categories} />
-                  </EditActionDialog>
-                  <DeleteActionDialog
-                    action={deleteCategory}
-                    id={category.id}
-                    title="حذف دسته‌بندی"
-                    description={`آیا از حذف «${category.name}» مطمئن هستید؟`}
-                  />
-                </div>
-              </TableCell>
+              </TableHead>
+              <TableHead className="py-3 text-xs font-semibold text-muted-foreground">نام</TableHead>
+              <TableHead className="py-3 text-xs font-semibold text-muted-foreground">شناسه (Slug)</TableHead>
+              <TableHead className="py-3 text-xs font-semibold text-muted-foreground">والد</TableHead>
+              <TableHead className="py-3 text-xs font-semibold text-muted-foreground">تعداد محصول</TableHead>
+              <TableHead className="py-3 text-start text-xs font-semibold text-muted-foreground">عملیات</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {categories.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-16">
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <span className="flex size-14 items-center justify-center rounded-2xl bg-muted border border-border/50">
+                      <IconCategory size={26} className="text-muted-foreground" stroke={1.6} />
+                    </span>
+                    <p className="text-sm font-medium">هنوز دسته‌بندی‌ای وجود ندارد</p>
+                    <p className="text-xs text-muted-foreground">اولین دسته‌بندی فروشگاه را بسازید</p>
+                    <ActionDialog
+                      triggerLabel="دسته‌بندی جدید"
+                      triggerVariant="default"
+                      triggerIcon={IconPlus}
+                      title="ایجاد دسته‌بندی"
+                      description="یک دسته‌بندی جدید برای نمایش در فروشگاه بسازید."
+                      action={createCategory}
+                      submitLabel="ایجاد"
+                      contentClassName="sm:max-w-md!"
+                    >
+                      <CategoryFields categories={categories} />
+                    </ActionDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+            {categories.map((category) => (
+              <TableRow key={category.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="py-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(category.id)}
+                    onChange={() => toggle(category.id)}
+                    aria-label={`انتخاب ${category.name}`}
+                    className="h-4 w-4 cursor-pointer accent-[var(--primary)] rounded"
+                  />
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-3">
+                    {category.image ? (
+                      <img src={category.image} alt="" className="size-10 rounded-xl object-contain bg-muted border border-border/50 shrink-0" />
+                    ) : (
+                      <span className="size-10 rounded-xl bg-muted border border-border/50 flex items-center justify-center shrink-0">
+                        <IconFolder size={18} className="text-muted-foreground" />
+                      </span>
+                    )}
+                    <span className="font-medium text-sm">{category.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">{category.slug}</TableCell>
+                <TableCell className="py-3">
+                  {category.parentId ? (
+                    <Badge variant="secondary" className="rounded-full text-xs font-normal">
+                      {categories.find((c) => c.id === category.parentId)?.name || "—"}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-3">
+                  <Badge variant="outline" className="rounded-full tabular-nums font-medium">
+                    {category._count?.products ?? 0}
+                  </Badge>
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-1">
+                    <EditActionDialog
+                      title="ویرایش دسته‌بندی"
+                      triggerIcon={IconPencil}
+                      action={updateCategory}
+                      contentClassName="sm:max-w-md!"
+                    >
+                      <CategoryFields category={category} categories={categories} />
+                    </EditActionDialog>
+                    <DeleteActionDialog
+                      action={deleteCategory}
+                      id={category.id}
+                      title="حذف دسته‌بندی"
+                      description={`آیا از حذف «${category.name}» مطمئن هستید؟`}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

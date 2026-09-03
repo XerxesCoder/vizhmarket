@@ -73,14 +73,9 @@ function generateVariantSku(productSlug, index) {
 // http/https/data/blob URLs and already-rooted paths are passed through untouched.
 function normalizeAssetPath(p) {
   if (!p) return p;
-  if (
-    /^(https?:)?\/\//.test(p) ||
-    /^data:/i.test(p) ||
-    /^blob:/i.test(p) ||
-    p.startsWith("/")
-  )
-    return p;
-  return `/${p}`;
+  let n = p.replace(/\\/g, "/").trim();
+  if (/^(https?:)?\/\//.test(n) || /^data:/i.test(n) || /^blob:/i.test(n) || n.startsWith("/")) return n;
+  return `/${n}`;
 }
 
 // Single optional image (category) — normalized path
@@ -341,7 +336,7 @@ export async function createCategory(formData) {
 
   const parentId = optionalStr(formData, "parentId") || undefined;
   try {
-    await prisma.category.create({
+    const category = await prisma.category.create({
       data: {
         name,
         slug,
@@ -350,7 +345,9 @@ export async function createCategory(formData) {
       },
     });
     revalidateCatalog();
-    return { success: true };
+    // Return the created category so callers (e.g. the product form's inline
+    // category dialog) can append + auto-select it without a refetch.
+    return { success: true, category: { id: category.id, name: category.name } };
   } catch (err) {
     if (err?.code === "P2002") return { error: "دسته‌بندی یا اسلاگ تکراری" };
     console.error("createCategory failed:", err);
@@ -516,6 +513,27 @@ export async function deleteUser(formData) {
 }
 
 // ---------- Full revalidation (e.g. after seed/migration) ----------
+export async function updateExchangeRate(formData) {
+  const rate = num(formData, "aedToIrr", NaN);
+  if (!Number.isFinite(rate) || rate <= 0) return { error: "نرخ معتبر وارد کنید" };
+  const existing = await prisma.exchangeRate.findFirst({ where: { isActive: true } });
+  if (existing) await prisma.exchangeRate.update({ where: { id: existing.id }, data: { aedToIrr: rate } });
+  else await prisma.exchangeRate.create({ data: { aedToIrr: rate, isActive: true } });
+  const recalc = bool(formData, "recalculate");
+  if (recalc) await recalculateVariantPrices(rate);
+  updateTag(adminTags.exchangeRate);
+  return { success: true };
+}
+
+export async function recalculateVariantPrices(rate) {
+  const variants = await prisma.productVariant.findMany({ where: { aedPrice: { gt: 0 }, stock: { gt: 0 } }, select: { id: true, aedPrice: true } });
+  for (const v of variants) {
+    await prisma.productVariant.update({ where: { id: v.id }, data: { irrPrice: Math.round(v.aedPrice * rate) } });
+  }
+  updateTag(cacheTags.products);
+  return { success: true, count: variants.length };
+}
+
 export async function revalidateAllTags() {
   "use server";
   const tags = new Set([

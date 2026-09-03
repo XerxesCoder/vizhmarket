@@ -4,6 +4,7 @@ import ProductDetail from "@/components/store/product-detail";
 import { Breadcrumb } from "@/components/store/breadcrumb";
 import { getProductPage, getProductSlugs } from "@/lib/data/web-store";
 import { Skeleton } from "@/components/ui/skeleton";
+import { buildMetadata, breadcrumbJsonLd, productJsonLd, itemListJsonLd } from "@/lib/seo";
 
 // Prerender product pages at build; new products render on demand
 export async function generateStaticParams() {
@@ -14,9 +15,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const { product, category } = await params;
   const productData = await getProductPage(category, product);
-  return {
-    title: productData ? `${productData.title} | ویژ مارکت` : "محصول یافت نشد | ویژ مارکت",
-  };
+  if (!productData) return buildMetadata({ title: "محصول یافت نشد | ویژ مارکت", description: "", path: `/store/${category}/${product}` });
+  return buildMetadata({ title: `${productData.title} | ویژ مارکت`, description: productData.description?.slice(0, 150) || productData.title, path: `/store/${category}/${product}`, image: productData.images?.[0] });
 }
 
 // Product detail skeleton shown while the product streams in (PPR static shell)
@@ -53,6 +53,9 @@ async function ProductContent({ params }) {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd([{ name: "خانه", path: "/" }, { name: "فروشگاه", path: "/store" }, { name: category.name, path: `/store/${category.slug}` }, { name: product.title, path: `/store/${category.slug}/${product.slug}` }])) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }} />
+      {product.related?.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd(product.related, `محصولات مرتبط ${category.name}`)) }} />}
       <Breadcrumb trail={trail} current={product.title} />
       <ProductDetail product={product} />
     </>

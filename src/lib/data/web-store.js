@@ -128,11 +128,19 @@ export async function getProductPage(categorySlug, productSlug) {
   "use cache";
   cacheTag(cacheTags.products, cacheTags.categories);
   cacheLife("max");
-  return prisma.product.findFirst({
+  const product = await prisma.product.findFirst({
     where: { slug: productSlug, category: { slug: categorySlug }, isActive: true },
     include: {
       category: { include: { parent: true } },
       variants: { orderBy: { isDefault: "desc" }, include: { attributes: true } },
     },
   });
+  if (!product) return null;
+  const related = await prisma.product.findMany({
+    where: { categoryId: product.categoryId, isActive: true, id: { not: product.id } },
+    include: { category: true, variants: { include: { attributes: true } } },
+    orderBy: { totalSold: "desc" },
+    take: 3,
+  });
+  return { ...product, related };
 }

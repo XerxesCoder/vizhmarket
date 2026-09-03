@@ -2,7 +2,9 @@ import { cacheTag, cacheLife } from "next/cache";
 import prisma from "@/lib/prisma";
 import { cacheTags } from "@/lib/data/web-store";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+import { SITE_URL } from "@/lib/seo";
+import { posts } from "@/lib/blog/posts";
+const baseUrl = SITE_URL;
 
 async function getSitemapData() {
   "use cache";
@@ -28,7 +30,8 @@ async function getSitemapData() {
 export default async function sitemap() {
   const { categories, products } = await getSitemapData();
 
-  const staticRoutes = ["", "/store", "/cart", "/checkout", "/login", "/order"].map(
+  const blogRoutes = posts.map((p) => ({ url: `${baseUrl}/blog/${p.slug}`, lastModified: new Date(p.date), changeFrequency: "monthly", priority: 0.6 }));
+  const staticRoutes = ["", "/store", "/blog", "/terms", "/privacy"].map(
     (route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -53,5 +56,5 @@ export default async function sitemap() {
       priority: 0.8,
     }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...productRoutes];
 }

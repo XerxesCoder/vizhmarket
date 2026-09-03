@@ -6,6 +6,15 @@ import {
   IconBrandTwitter,
   IconBrandWhatsapp,
   IconChevronLeft,
+  IconHelp,
+  IconRefresh,
+  IconFileText,
+  IconShield,
+  IconPhone,
+  IconInfoCircle,
+  IconArticle,
+  IconHeadset,
+  IconMail,
 } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -20,19 +29,28 @@ const FOOTER_SECTIONS = [
   {
     title: "خدمات مشتریان",
     links: [
-      { label: "پرسش‌های متداول", href: "#" },
-      { label: "رویه بازگرداندن کالا", href: "#" },
-      { label: "شرایط استفاده", href: "#" },
+      { label: "پرسش‌های متداول", href: "/faq", icon: IconHelp },
+      { label: "رویه بازگرداندن کالا", href: "/returns", icon: IconRefresh },
+      { label: "شرایط استفاده", href: "/terms", icon: IconFileText },
+      { label: "حریم خصوصی", href: "/privacy", icon: IconShield },
     ],
   },
   {
     title: "درباره ویژ مارکت",
     links: [
-      { label: "تماس با ما", href: "#contact" },
-      { label: "قوانین و مقررات", href: "#" },
-      { label: "حریم خصوصی", href: "#" },
+      { label: "تماس با ما", href: "/contact", icon: IconPhone },
+      { label: "درباره ما", href: "/about", icon: IconInfoCircle },
+      { label: "بلاگ", href: "/blog", icon: IconArticle },
     ],
   },
+  /*   {
+    title: "پشتیبانی",
+    links: [
+      { label: "پشتیبانی آنلاین", href: "/contact", icon: IconHeadset },
+      { label: "ایمیل پشتیبانی", href: "mailto:support@vizhmarket.ir", icon: IconMail },
+      { label: "تماس با ما", href: "/contact", icon: IconPhone },
+    ], 
+  },*/
 ];
 
 export default function Footer() {
@@ -85,17 +103,20 @@ export default function Footer() {
                 {section.title}
               </h3>
               <ul className="space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <IconChevronLeft size={12} className="opacity-50" />
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {section.links.map((link) => {
+                  const LinkIcon = link.icon || IconChevronLeft;
+                  return (
+                    <li key={link.label + link.href}>
+                      <Link
+                        href={link.href}
+                        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <LinkIcon size={14} className="opacity-70" />
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

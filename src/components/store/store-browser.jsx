@@ -1,12 +1,14 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SectionProductCard } from "@/components/store/section-product-card";
 import {
   IconChevronDown,
   IconChevronUp,
   IconSortDescending,
   IconFilter,
+  IconSearch,
 } from "@tabler/icons-react";
 
 const SORTS = [
@@ -17,14 +19,21 @@ const SORTS = [
 ];
 
 function minPrice(product) {
-  const prices = product.variants.map((v) => v.irrPrice || v.aedPrice || Infinity);
+  const prices = product.variants.map(
+    (v) => v.irrPrice || v.aedPrice || Infinity,
+  );
   return prices.length ? Math.min(...prices) : Infinity;
 }
 
-export default function StoreBrowser({ products, categories, initialCategory }) {
-  const [selected, setSelected] = useState(
-    initialCategory ? new Set([initialCategory]) : new Set()
-  );
+export default function StoreBrowser({
+  products,
+  categories,
+  initialCategory,
+  initialSearch = "",
+}) {
+  const [selected, setSelected] = useState(initialCategory || null);
+  const [query, setQuery] = useState(initialSearch);
+  useEffect(() => setQuery(initialSearch), [initialSearch]);
   const [expanded, setExpanded] = useState(
     new Set(
       initialCategory
@@ -32,20 +41,19 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
             .filter(
               (c) =>
                 c.slug === initialCategory ||
-                c.children.some((ch) => ch.slug === initialCategory)
+                c.children.some((ch) => ch.slug === initialCategory),
             )
             .map((c) => c.slug)
-        : []
-    )
+        : [],
+    ),
   );
   const [sort, setSort] = useState("newest");
 
-  const toggleCategory = (slug) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(slug) ? next.delete(slug) : next.add(slug);
-      return next;
-    });
+  const toggleCategory = (slug) => {
+    setSelected((prev) => (prev === slug ? null : slug));
+    const cat = categories.find((c) => c.slug === slug);
+    if (cat?.children.length) setExpanded((prev) => new Set(prev).add(slug));
+  };
 
   const toggleExpand = (slug) =>
     setExpanded((prev) => {
@@ -54,18 +62,13 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
       return next;
     });
 
-  // Expand selection to descendants so selecting a parent also shows its children's products
   const selectedSlugs = useMemo(() => {
-    const set = new Set();
+    if (!selected) return new Set();
+    const set = new Set([selected]);
     categories.forEach((cat) => {
-      if (selected.has(cat.slug)) {
-        set.add(cat.slug);
-        cat.children.forEach((ch) => set.add(ch.slug));
-      } else {
-        cat.children.forEach((ch) => {
-          if (selected.has(ch.slug)) set.add(ch.slug);
-        });
-      }
+      if (cat.slug === selected) cat.children.forEach((ch) => set.add(ch.slug));
+      else if (cat.children.some((ch) => ch.slug === selected))
+        set.add(selected);
     });
     return set;
   }, [selected, categories]);
@@ -75,6 +78,13 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
       selectedSlugs.size === 0
         ? products
         : products.filter((p) => selectedSlugs.has(p.category?.slug));
+    const q = query.trim().toLowerCase();
+    if (q)
+      list = list.filter(
+        (p) =>
+          p.title?.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q),
+      );
     list = [...list];
     switch (sort) {
       case "best-selling":
@@ -90,7 +100,7 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
         list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
     return list;
-  }, [products, selectedSlugs, sort]);
+  }, [products, selectedSlugs, sort, query]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -104,7 +114,7 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
           <div className="flex flex-col gap-1">
             {categories.map((cat) => {
               const isOpen = expanded.has(cat.slug);
-              const isSel = selected.has(cat.slug);
+              const isSel = selected === cat.slug;
               return (
                 <div key={cat.id}>
                   <div className="flex items-center">
@@ -114,7 +124,11 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
                         className="p-1.5 text-muted-foreground hover:text-foreground"
                         aria-label="باز/بسته"
                       >
-                        {isOpen ? <IconChevronUp size={15} /> : <IconChevronDown size={15} />}
+                        {isOpen ? (
+                          <IconChevronUp size={15} />
+                        ) : (
+                          <IconChevronDown size={15} />
+                        )}
                       </button>
                     ) : (
                       <span className="w-7" />
@@ -133,7 +147,7 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
 
                   {isOpen &&
                     cat.children.map((child) => {
-                      const isChildSel = selected.has(child.slug);
+                      const isChildSel = selected === child.slug;
                       return (
                         <button
                           key={child.id}
@@ -156,21 +170,44 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
             })}
           </div>
 
-          {selected.size > 0 && (
+          {selected && (
             <button
-              onClick={() => setSelected(new Set())}
+              onClick={() => setSelected(null)}
               className="mt-3 w-full text-xs text-muted-foreground hover:text-primary py-2 transition-colors"
             >
-              حذف فیلترها ({selected.size})
+              حذف فیلتر
             </button>
           )}
         </div>
       </aside>
 
-      {/* ── Products ── */}
       <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="relative flex-1 max-w-sm">
+            <IconSearch
+              size={16}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="جستجو نام یا برند..."
+              className="w-full h-9 rounded-xl border border-border bg-background pe-3 ps-9 text-sm outline-none focus-visible:border-ring"
+            />
+          </div>
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              پاک کردن
+            </button>
+          )}
+        </div>
         <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-          <p className="text-sm text-muted-foreground">{filtered.length} محصول</p>
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} محصول
+          </p>
           <label className="flex items-center gap-2 text-sm">
             <IconSortDescending size={16} className="text-muted-foreground" />
             <select
@@ -202,4 +239,3 @@ export default function StoreBrowser({ products, categories, initialCategory }) 
     </div>
   );
 }
-

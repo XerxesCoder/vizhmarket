@@ -25,6 +25,8 @@ export function ActionDialog({
   description,
   action,
   submitLabel = "ذخیره",
+  contentClassName, // widen the dialog beyond the default max-w-md (e.g. product forms)
+  onSuccess, // optional callback fired with the action result after a successful submit
   children,
 }) {
   const [open, setOpen] = useState(false);
@@ -41,6 +43,7 @@ export function ActionDialog({
       } else {
         setOpen(false);
         setError(null);
+        onSuccess?.(res);
       }
     });
   };
@@ -61,7 +64,7 @@ export function ActionDialog({
         {TriggerIcon && <TriggerIcon size={16} />}
         {triggerLabel}
       </Button>
-      <DialogContent dir="rtl">
+      <DialogContent dir="rtl" className={contentClassName}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
